@@ -20,9 +20,11 @@ async function checkAmbiguity(text) {
       messages: [
         {
           role: 'system',
-          content: `You are an AI assistant that evaluates predictions for ambiguity. Your task is to return a single floating-point number between 0.0 and 1.0, where 0.0 means the prediction is not ambiguous and 1.0 means it is highly ambiguous.
-
-**Examples:**
+          content: 'You are an AI assistant that evaluates predictions for ambiguity. Your task is to return a single floating-point number between 0.0 and 1.0, where 0.0 means the prediction is not ambiguous and 1.0 means it is highly ambiguous. Return only the score.'
+        },
+        {
+          role: 'user',
+          content: `Here are some examples of predictions and their ambiguity scores:
 
 *   **Prediction:** "@watchthis crypto goes up tomorrow"
     **Score:** 1.0
@@ -33,13 +35,10 @@ async function checkAmbiguity(text) {
 *   **Prediction:** "@watchthis it will rain by 10h"
     **Score:** 0.0
 
-**Your Task:**
+Now, analyze the following prediction and return only the ambiguity score:
 
-Analyze the following prediction and return only the ambiguity score. Do not include any other text, explanation, or formatting.`
-        },
-        {
-          role: 'user',
-          content: `**Prediction:**\n${text}`
+**Prediction:**
+${text}`
         }
       ],
       temperature: 0,
