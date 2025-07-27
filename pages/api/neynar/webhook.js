@@ -19,36 +19,33 @@ async function checkAmbiguity(text) {
       messages: [
         {
           role: 'system',
-          content: 'You are an AI assistant that evaluates predictions for ambiguity. Your task is to return a single floating-point number between 0.0 and 1.0, where 0.0 means the prediction is not ambiguous and 1.0 means it is highly ambiguous. Return only the score.'
+          content: `You are an AI assistant that evaluates predictions for ambiguity. Your task is to return a JSON object with a single key, "score", which is a floating-point number between 0.0 and 1.0.
+
+**Examples:**
+
+*   **Prediction:** "@watchthis crypto goes up tomorrow"
+    **Response:** {"score": 1.0}
+*   **Prediction:** "@watchthis BTC will be over $70000 by tomorrow"
+    **Response:** {"score": 0.0}
+
+Now, analyze the following prediction and return only the JSON object:`
         },
         {
           role: 'user',
-          content: `Here are some examples of predictions and their ambiguity scores:
-
-*   **Prediction:** "@watchthis crypto goes up tomorrow"
-    **Score:** 1.0
-*   **Prediction:** "@watchthis I will be happy by Friday"
-    **Score:** 1.0
-*   **Prediction:** "@watchthis BTC will be over $70000 by tomorrow"
-    **Score:** 0.0
-*   **Prediction:** "@watchthis it will rain by 10h"
-    **Score:** 0.0
-
-Now, analyze the following prediction and return only the ambiguity score:
-
-**Prediction:**
-${text}`
+          content: `**Prediction:**\n${text}`
         }
       ],
       temperature: 0,
-      max_tokens: 1,
+      max_tokens: 50,
+      response_format: { type: "json_object" },
     }, {
       headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json'
       }
     });
-    const score = parseFloat(response.data.choices[0].message.content);
+    const responseJson = JSON.parse(response.data.choices[0].message.content);
+    const score = responseJson.score;
     if (isNaN(score)) {
       console.error('OpenRouter response is not a number:', response.data.choices[0].message.content);
       return 1; // Assume ambiguous if the response is not a number
