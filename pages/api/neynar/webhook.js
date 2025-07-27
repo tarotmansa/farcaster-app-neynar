@@ -1,3 +1,4 @@
+const axios = require('axios');
 
 const VALID_PATTERNS = [
   /^@watchthis .+ by (today|tomorrow|\d+h|\d+d|December \d+(st|nd|rd|th)?|January \d+(st|nd|rd|th)?)$/i,
@@ -10,8 +11,6 @@ const INVALID_PATTERNS = [
   /\b(many|few|around|approximately)\b/i,  // vague quantities
   /\bif .+ then .+\b/i                     // conditional statements
 ];
-
-const axios = require('axios');
 
 async function checkAmbiguity(text) {
   try {
@@ -61,11 +60,27 @@ ${text}`
   }
 }
 
-function isValidFormat(text) {
-  if (INVALID_PATTERNS.some(pattern => pattern.test(text))) {
-    return false;
+async function validateMarketRequest(mention) {
+  // 1. Format validation
+  if (!mention.text.startsWith('@watchthis')) {
+    return { valid: false, error: 'Must start with @watchthis' };
   }
-  return VALID_PATTERNS.some(pattern => pattern.test(text));
+
+  if (INVALID_PATTERNS.some(pattern => pattern.test(mention.text))) {
+    return { valid: false, error: 'Invalid format: subjective or vague terms' };
+  }
+
+  if (!VALID_PATTERNS.some(pattern => pattern.test(mention.text))) {
+    return { valid: false, error: 'Invalid format: does not match any valid patterns' };
+  }
+
+  // 2. AI ambiguity check
+  const ambiguityScore = await checkAmbiguity(mention.text);
+  if (ambiguityScore > 0.7) {
+    return { valid: false, error: `Prediction too vague. Ambiguity score: ${ambiguityScore}` };
+  }
+
+  return { valid: true, market: { text: mention.text } };
 }
 
 export default async function handler(req, res) {
@@ -78,19 +93,8 @@ export default async function handler(req, res) {
 
     if (type === 'cast.created' && data.text.includes('@watchthis')) {
       console.log('Received a @watchthis mention:', data);
-      
-      if (isValidFormat(data.text)) {
-        console.log('Valid format');
-        const ambiguityScore = await checkAmbiguity(data.text);
-        console.log('Ambiguity score:', ambiguityScore);
-        if (ambiguityScore > 0.7) {
-          console.log('Prediction is too ambiguous');
-        } else {
-          console.log('Prediction is not ambiguous');
-        }
-      } else {
-        console.log('Invalid format');
-      }
+      const validationResult = await validateMarketRequest(data);
+      console.log('Validation result:', validationResult);
     }
 
     res.status(200).json({ success: true });
