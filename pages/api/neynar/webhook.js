@@ -77,7 +77,21 @@ async function validateMarketRequest(mention) {
     return { valid: false, error: `Prediction too vague. Ambiguity score: ${ambiguityScore}` };
   }
 
-  return { valid: true, market: { text: mention.text } };
+  return { valid: true, market: { text: mention.text, creator: mention.author.fid, channelId: mention.parent_url } };
+}
+
+import clientPromise from '../../../lib/mongodb';
+
+async function saveMarket(market) {
+  try {
+    const client = await clientPromise;
+    const db = client.db("iwager");
+    const markets = db.collection("markets");
+    const result = await markets.insertOne(market);
+    console.log('Market saved to database:', result);
+  } catch (error) {
+    console.error('Error saving market to database:', error);
+  }
 }
 
 export default async function handler(req, res) {
@@ -92,6 +106,9 @@ export default async function handler(req, res) {
       console.log('Received a @watchthis mention:', data);
       const validationResult = await validateMarketRequest(data);
       console.log('Validation result:', validationResult);
+      if (validationResult.valid) {
+        await saveMarket(validationResult.market);
+      }
     }
 
     res.status(200).json({ success: true });
