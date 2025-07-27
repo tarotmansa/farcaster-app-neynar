@@ -20,7 +20,21 @@ async function checkAmbiguity(text) {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that determines if a prediction is ambiguous. Respond with a score from 0 to 1, where 1 is highly ambiguous and 0 is not ambiguous at all. Only respond with the score.'
+          content: `You are a helpful assistant that determines if a prediction is ambiguous. Respond with a score from 0 to 1, where 1 is highly ambiguous and 0 is not ambiguous at all. Only respond with the score.
+
+Here are some examples:
+
+User: "@watchthis crypto goes up tomorrow"
+Assistant: 1
+
+User: "@watchthis I will be happy by Friday"
+Assistant: 1
+
+User: "@watchthis BTC will be over $70000 by tomorrow"
+Assistant: 0
+
+User: "@watchthis it will rain by 10h"
+Assistant: 0`
         },
         {
           role: 'user',
