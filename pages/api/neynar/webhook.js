@@ -1,7 +1,7 @@
 
 const VALID_PATTERNS = [
-  /^@watchthis .+ by (today|tomorrow|\d+h|\d+d|December \d+|January \d+)$/i,
-  /^@watchthis .+ hits \$\d+k? by .+$/i,
+  /^@watchthis .+ by (today|tomorrow|\d+h|\d+d|December \d+(st|nd|rd|th)?|January \d+(st|nd|rd|th)?)$/i,
+  /^@watchthis .+ hits \$\d+k?(m|b)? by .+$/i,
   /^@watchthis .+ outperforms .+ (today|this week|this month)$/i
 ];
 
