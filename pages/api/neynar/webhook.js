@@ -11,16 +11,12 @@ const INVALID_PATTERNS = [
   /\bif .+ then .+\b/i                     // conditional statements
 ];
 
-const OpenAI = require('openai');
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const axios = require('axios');
 
 async function checkAmbiguity(text) {
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+    const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+      model: process.env.OPENROUTER_MODEL || 'mistralai/mistral-7b-instruct:free',
       messages: [
         {
           role: 'system',
@@ -33,8 +29,13 @@ async function checkAmbiguity(text) {
       ],
       temperature: 0,
       max_tokens: 1,
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
     });
-    return parseFloat(response.choices[0].message.content);
+    return parseFloat(response.data.choices[0].message.content);
   } catch (error) {
     console.error('Error checking ambiguity:', error);
     return 1; // Assume ambiguous if there's an error
