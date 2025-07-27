@@ -16,7 +16,7 @@ const axios = require('axios');
 async function checkAmbiguity(text) {
   try {
     const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-      model: process.env.OPENROUTER_MODEL || 'mistralai/mistral-7b-instruct:free',
+      model: process.env.OPENROUTER_MODEL || 'mistralai/mistral-7b-instruct',
       messages: [
         {
           role: 'system',
