@@ -20,25 +20,26 @@ async function checkAmbiguity(text) {
       messages: [
         {
           role: 'system',
-          content: `You are a helpful assistant that determines if a prediction is ambiguous. Respond with a score from 0 to 1, where 1 is highly ambiguous and 0 is not ambiguous at all. Only respond with the score.
+          content: `You are an AI assistant that evaluates predictions for ambiguity. Your task is to return a single floating-point number between 0.0 and 1.0, where 0.0 means the prediction is not ambiguous and 1.0 means it is highly ambiguous.
 
-Here are some examples:
+**Examples:**
 
-User: "@watchthis crypto goes up tomorrow"
-Assistant: 1
+*   **Prediction:** "@watchthis crypto goes up tomorrow"
+    **Score:** 1.0
+*   **Prediction:** "@watchthis I will be happy by Friday"
+    **Score:** 1.0
+*   **Prediction:** "@watchthis BTC will be over $70000 by tomorrow"
+    **Score:** 0.0
+*   **Prediction:** "@watchthis it will rain by 10h"
+    **Score:** 0.0
 
-User: "@watchthis I will be happy by Friday"
-Assistant: 1
+**Your Task:**
 
-User: "@watchthis BTC will be over $70000 by tomorrow"
-Assistant: 0
-
-User: "@watchthis it will rain by 10h"
-Assistant: 0`
+Analyze the following prediction and return only the ambiguity score. Do not include any other text, explanation, or formatting.`
         },
         {
           role: 'user',
-          content: text
+          content: `**Prediction:**\n${text}`
         }
       ],
       temperature: 0,
@@ -49,7 +50,12 @@ Assistant: 0`
         'Content-Type': 'application/json'
       }
     });
-    return parseFloat(response.data.choices[0].message.content);
+    const score = parseFloat(response.data.choices[0].message.content);
+    if (isNaN(score)) {
+      console.error('OpenRouter response is not a number:', response.data.choices[0].message.content);
+      return 1; // Assume ambiguous if the response is not a number
+    }
+    return score;
   } catch (error) {
     console.error('Error checking ambiguity:', error);
     return 1; // Assume ambiguous if there's an error
