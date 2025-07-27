@@ -80,15 +80,17 @@ async function validateMarketRequest(mention) {
   return { valid: true, market: { text: mention.text, creator: mention.author.fid, channelId: mention.parent_url } };
 }
 
-import clientPromise from '../../../lib/mongodb';
+import { supabase } from '../../../lib/supabase';
 
 async function saveMarket(market) {
   try {
-    const client = await clientPromise;
-    const db = client.db("iwager");
-    const markets = db.collection("markets");
-    const result = await markets.insertOne(market);
-    console.log('Market saved to database:', result);
+    const { data, error } = await supabase
+      .from('markets')
+      .insert([market]);
+    if (error) {
+      throw error;
+    }
+    console.log('Market saved to database:', data);
   } catch (error) {
     console.error('Error saving market to database:', error);
   }
