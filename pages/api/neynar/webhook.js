@@ -57,7 +57,7 @@ Now, analyze the following prediction and return only the JSON object:`
   }
 }
 
-async function validateMarketRequest(mention) {
+async function validateMarketRequest(mention, data) {
   // 1. Format validation
   if (!mention.text.startsWith('@watchthis')) {
     return { valid: false, error: 'Must start with @watchthis' };
@@ -77,7 +77,7 @@ async function validateMarketRequest(mention) {
     return { valid: false, error: `Prediction too vague. Ambiguity score: ${ambiguityScore}` };
   }
 
-  return { valid: true, market: { text: mention.text, creator: mention.author.fid, channelId: mention.parent_url } };
+  return { valid: true, market: { text: mention.text, creator: mention.author.fid, channelId: mention.parent_url, parent: mention.hash } };
 }
 
 import { supabase } from '../../../lib/supabase';
@@ -107,7 +107,7 @@ export default async function handler(req, res) {
 
     if (type === 'cast.created' && data.text.includes('@watchthis')) {
       console.log('Received a @watchthis mention:', data);
-      const validationResult = await validateMarketRequest(data);
+      const validationResult = await validateMarketRequest(data, data);
       console.log('Validation result:', validationResult);
       if (validationResult.valid) {
         const newMarket = await saveMarket(validationResult.market);
@@ -121,7 +121,7 @@ export default async function handler(req, res) {
               signer_uuid: process.env.NEYNAR_SIGNER_UUID,
               text: `A new market has been created!`,
               embeds: [{ url: frameUrl }],
-              channel_id: validationResult.market.channelId,
+              parent: validationResult.market.parent,
             }, {
               headers: {
                 'api_key': neynarApiKey,

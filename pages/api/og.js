@@ -13,17 +13,18 @@ export default function handler(req) {
       <div
         style={{
           display: 'flex',
-          fontSize: 40,
-          color: 'black',
-          background: 'white',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           width: '100%',
           height: '100%',
+          backgroundColor: '#1A1A1A',
+          color: 'white',
           textAlign: 'center',
-          justifyContent: 'center',
-          alignItems: 'center',
         }}
       >
-        {question}
+        <h1 style={{ fontSize: 50, margin: 0, paddingBottom: 20 }}>iWager</h1>
+        <p style={{ fontSize: 40, margin: 0 }}>{question}</p>
       </div>
     ),
     {
