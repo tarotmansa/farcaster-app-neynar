@@ -83,17 +83,18 @@ async function validateMarketRequest(mention) {
 import { supabase } from '../../../lib/supabase';
 
 async function saveMarket(market) {
-  try {
-    const { data, error } = await supabase
-      .from('markets')
-      .insert([market]);
-    if (error) {
-      throw error;
-    }
-    console.log('Market saved to database:', data);
-  } catch (error) {
+  const { data, error } = await supabase
+    .from('markets')
+    .insert([market])
+    .select();
+
+  if (error) {
     console.error('Error saving market to database:', error);
+    throw error;
   }
+
+  console.log('Market saved to database:', data);
+  return data[0];
 }
 
 export default async function handler(req, res) {
@@ -109,7 +110,29 @@ export default async function handler(req, res) {
       const validationResult = await validateMarketRequest(data);
       console.log('Validation result:', validationResult);
       if (validationResult.valid) {
-        await saveMarket(validationResult.market);
+        const newMarket = await saveMarket(validationResult.market);
+        if (newMarket) {
+          try {
+            const frameUrl = `${process.env.NEXT_PUBLIC_HOST}/api/frame?marketId=${newMarket.id}`;
+            const neynarApiKey = process.env.NEYNAR_API_KEY;
+            
+            // Post the frame to Farcaster
+            await axios.post('https://api.neynar.com/v2/farcaster/cast', {
+              signer_uuid: process.env.NEYNAR_SIGNER_UUID,
+              text: `A new market has been created!`,
+              embeds: [{ url: frameUrl }],
+              channel_id: validationResult.market.channelId,
+            }, {
+              headers: {
+                'api_key': neynarApiKey,
+                'Content-Type': 'application/json',
+              },
+            });
+            console.log('Frame posted to Farcaster for market:', newMarket.id);
+          } catch (error) {
+            console.error('Error posting frame to Farcaster:', error.response ? error.response.data : error.message);
+          }
+        }
       }
     }
 
